@@ -20,21 +20,52 @@ void show_obj();
 void gc();
 
 
-
 template <typename T>
 struct gc_ptr {
   T* ptr;
   void* context;
 
   gc_ptr() : ptr(nullptr), context(nullptr) {}
-  gc_ptr(T* p) : ptr(p), context(nullptr) { if(ptr) {objects.emplace(p, [p]{delete p;}); root.emplace_back(p);} }
-  gc_ptr(void* cont) : context(cont), ptr(nullptr) {}
-  gc_ptr(const gc_ptr<T>& rhs) { ptr = rhs.ptr; context = rhs.context; if(ptr) root.emplace_back(ptr); }
-  
-  ~gc_ptr() { if (ptr) root.pop_back(); }
 
-  gc_ptr<T>& operator=(const gc_ptr<T>& p) { objects[context].children.emplace(p.ptr); }
+  gc_ptr(T* p) : ptr(p), context(nullptr) { 
+    if(ptr) 
+    {
+      function<void()> bla = [p](){p->~T(); free(p);};
+      objects.emplace(static_cast<void*>(p), bla); 
+      root.emplace_back(p);
+    }
+  }
+
+/*
+  gc_ptr(void* cont) : context(cont), ptr(nullptr) {}
+
+*/
+  gc_ptr(const gc_ptr<T>& rhs)
+  { 
+    ptr = rhs.ptr; 
+    context = rhs.context; 
+    if(ptr) root.emplace_back(ptr); 
+  }
+  
+  ~gc_ptr() 
+  { 
+    //cout << "kasujemy pointer\n";
+    if (ptr) root.pop_back(); 
+  }
+
+  gc_ptr<T>& operator=(const gc_ptr<T>& p) 
+  {
+    objects[context].children.emplace(p.ptr); 
+  }
 
   T* operator->() { return ptr; }
 };
+
+
+template <typename T>
+gc_ptr<T> make_gc_ptr(T* t) {
+  return gc_ptr<T>(t);
+}
+
+
 

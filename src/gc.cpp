@@ -10,6 +10,7 @@ vector<void*> root;
 unordered_map<void*, Node> objects;
 
 void show_obj() {
+  cout << "---objects---\n";
   for (auto& x : objects) {
     cout << "ptr=" << x.first << ", visited=" << x.second.visited;
     cout << " {";
